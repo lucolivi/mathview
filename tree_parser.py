@@ -172,6 +172,8 @@ class proposition:
         self.type = a_or_p
         self.statement = statement
 
+        self._uncompressed = False
+
         self.number = number  # the count in the list of propositions
 
         self.label = label
@@ -218,8 +220,8 @@ class proposition:
 
     def print_details(self):
         print()
-        print('('+self.type+')',self.label+': arity',self.arity())
-        if len(self.d)>0: print(' ',self.d)
+        print('(' + self.type + ')', self.label + ': arity', self.arity())
+        if len(self.d) > 0: print(' ',self.d)
         print('f:',self.f)
         for hyp in self.hyps:
             print('  '+hyp.label+':',concatonate_to_string(hyp.statement))
@@ -335,83 +337,27 @@ class meta_math_database:  # the database is just a collection of blocks
 
             # new constants
             elif next_token == '$c':
-                new_tokens = file_contents.read_until('$.')
-                for token in new_tokens:
-                    if token in current_block.c: raise Exception('token already defined in scope')
-                    if token in current_block.v: raise Exception('token already defined in scope')
-                    current_block.c.add(token)
-                assert self.label == None #check for stray tokens
+                self.parse_c(current_block, file_contents)
 
             # new distinct variables.  Add them pairwise to the current block
             elif next_token == '$d':
-                new_tokens = file_contents.read_until('$.')
-                for i in range(len(new_tokens)):
-                    for j in range(i+1,len(new_tokens)):
-                        current_block.d.add((new_tokens[i],new_tokens[j]))
-                assert self.label == None #check for stray tokens
+                self.parse_d(current_block, file_contents)
 
             # new variables
             elif next_token == '$v':
-                new_tokens = file_contents.read_until('$.')
-                for token in new_tokens:
-                    if token in current_block.c: raise Exception('token already defined in scope')
-                    if token in current_block.v: raise Exception('token already defined in scope')
-                    current_block.v.add(token)
-                assert self.label == None #check for stray tokens
+                self.parse_v(current_block, file_contents)
 
             # class specifications for variables
             elif next_token == '$f':
-                #constant = file_contents.read_token()
-                variables = file_contents.read_until("$.")
-                assert len(variables)==2 # [constant, variable]
-                new_hypothesis=f_hypothesis(self.label,variables)
-                current_block.hyps.append(new_hypothesis)
-                current_block.f[self.label]=new_hypothesis
-                self.label = None
+                self.parse_f(current_block, file_contents)
 
             # assumptions for the theorems in the block
             elif next_token == '$e':
-                #constant = file_contents.read_token()
-                math_symbols = file_contents.read_until("$.")
-
-                # deal with the parse tree
-                _, tree = self.parser.parse_new_statement(["wff"]+math_symbols[1:],current_block)
-                if not tree:
-                    # Fuck: the parser failed
-                    raise Exception('Parsing of', math_symbols,'failed')
-                #replacement_dict={"VAR"+f.variable:f.label for f in current_block.f.values()}
-                #tree.replace_values(replacement_dict)
-
-
-                new_hypothesis=e_hypothesis(self.label,math_symbols,tree)
-                current_block.hyps.append(new_hypothesis)
-                current_block.e[self.label]=new_hypothesis
-                self.label = None
+                self.parse_e(current_block, file_contents)
 
             # an axiom --- I don't check uniqueness of labels like I should.
             elif next_token == '$a':
-                #constant = file_contents.read_token()
-                statement = file_contents.read_until("$.")
-                if statement[0]=="|-":
-                    _, tree = self.parser.parse_new_statement(["wff"]+statement[1:],current_block)
-                    #replacement_dict={"VAR"+f.variable:f.label for f in current_block.f.values()}
-                    #tree.replace_values(replacement_dict)
-                    #print '\nparsed axiom', self.label, statement, tree.stringify()
-                    #assert ["wff"]+statement[1:] == tree_to_string(tree,self,current_block)
-                else:
-                    tree = Tree(value=self.label,leaves=[f.tree for f in current_block.hyps if f.variable in statement])
-                    #print '\nunparsed axiom', self.label, statement, tree.stringify()
-                prop = proposition('a',self.label,current_block,statement,None,number=len(self.propositions), tree=tree)
-
-                if statement[0]!="|-": self.non_entails_axioms[prop.label]=prop
-
-                self.propositions[self.label]=prop
-                self.propositions_list.append(prop)
-                if len(self.propositions) % 10 ==0:#print len(self.propositions)#print prop.label #prop.print_details()
-                    sys.stdout.write('\rproposition: '+str(len(self.propositions)))
-                    sys.stdout.flush()
-                self.label = None
-
+                self.parse_a(current_block, file_contents)
 
             # a provable assertion
             elif next_token == '$p':
@@ -430,8 +376,78 @@ class meta_math_database:  # the database is just a collection of blocks
                 else:
                     self.label += ' '+next_token
 
+    def parse_c(self, current_block, file_contents):
+        new_tokens = file_contents.read_until('$.')
+        for token in new_tokens:
+            if token in current_block.c: raise Exception('token already defined in scope')
+            if token in current_block.v: raise Exception('token already defined in scope')
+            current_block.c.add(token)
+        assert self.label == None #check for stray tokens
 
+    def parse_d(self, current_block, file_contents):
+        new_tokens = file_contents.read_until('$.')
+        for i in range(len(new_tokens)):
+            for j in range(i+1,len(new_tokens)):
+                current_block.d.add((new_tokens[i],new_tokens[j]))
+        assert self.label == None #check for stray tokens
     
+    def parse_v(self, current_block, file_contents):
+        new_tokens = file_contents.read_until('$.')
+        for token in new_tokens:
+            if token in current_block.c: raise Exception('token already defined in scope')
+            if token in current_block.v: raise Exception('token already defined in scope')
+            current_block.v.add(token)
+        assert self.label == None #check for stray tokens
+
+    def parse_f(self, current_block, file_contents):
+        #constant = file_contents.read_token()
+        variables = file_contents.read_until("$.")
+        assert len(variables)==2 # [constant, variable]
+        new_hypothesis=f_hypothesis(self.label,variables)
+        current_block.hyps.append(new_hypothesis)
+        current_block.f[self.label]=new_hypothesis
+        self.label = None
+
+    def parse_e(self, current_block, file_contents):
+        #constant = file_contents.read_token()
+        math_symbols = file_contents.read_until("$.")
+
+        # deal with the parse tree
+        _, tree = self.parser.parse_new_statement(["wff"]+math_symbols[1:],current_block)
+        if not tree:
+            # Fuck: the parser failed
+            raise Exception('Parsing of', math_symbols,'failed')
+        #replacement_dict={"VAR"+f.variable:f.label for f in current_block.f.values()}
+        #tree.replace_values(replacement_dict)
+
+
+        new_hypothesis=e_hypothesis(self.label,math_symbols,tree)
+        current_block.hyps.append(new_hypothesis)
+        current_block.e[self.label]=new_hypothesis
+        self.label = None
+
+    def parse_a(self, current_block, file_contents):
+        statement = file_contents.read_until("$.")
+        if statement[0]=="|-":
+            _, tree = self.parser.parse_new_statement(["wff"]+statement[1:],current_block)
+            #replacement_dict={"VAR"+f.variable:f.label for f in current_block.f.values()}
+            #tree.replace_values(replacement_dict)
+            #print '\nparsed axiom', self.label, statement, tree.stringify()
+            #assert ["wff"]+statement[1:] == tree_to_string(tree,self,current_block)
+        else:
+            tree = Tree(value=self.label,leaves=[f.tree for f in current_block.hyps if f.variable in statement])
+            #print '\nunparsed axiom', self.label, statement, tree.stringify()
+        prop = proposition('a',self.label,current_block,statement,None,number=len(self.propositions), tree=tree)
+
+        if statement[0]!="|-": self.non_entails_axioms[prop.label]=prop
+
+        self.propositions[self.label]=prop
+        self.propositions_list.append(prop)
+        if len(self.propositions) % 10 ==0:#print len(self.propositions)#print prop.label #prop.print_details()
+            sys.stdout.write('\rproposition: '+str(len(self.propositions)))
+            sys.stdout.flush()
+        self.label = None
+
     def parse_p(self, current_block, file_contents):
         if self.remember_proof_steps:
             statement = file_contents.read_until("$=")
@@ -439,12 +455,17 @@ class meta_math_database:  # the database is just a collection of blocks
             prop = proposition('p', self.label, current_block,statement,proof,number=len(self.propositions),)
             self.propositions[self.label]=prop
             self.propositions_list.append(prop)
+
+            self.label = None
+
+            return
+
             self.uncompress(prop,current_block)  # uncompress the proof
             prop.update_optional_hypotheses(current_block)
             if len(self.propositions) % 10 ==0:#print len(self.propositions)#print prop.label #prop.print_details()
                 sys.stdout.write('\rproposition: '+str(len(self.propositions)))
                 sys.stdout.flush()
-            self.label = None
+
 
             #if statement[0]!="|-":
             #    self.non_entails_axioms[prop.label]=prop # these are all provable from non $p statements, so...
@@ -468,8 +489,11 @@ class meta_math_database:  # the database is just a collection of blocks
                 sys.stdout.flush()
             self.label = None
     
+    def read_theorem(self, label):
+        pass
+        #implement function to read a given theorem of the set.mm and recursively load its proof
     
-    def uncompress(self, prop,context):
+    def uncompress(self, prop, context):
         #print 'uncompressing'
         #print prop.proof[-1], concatonate_to_string(prop.statement)
         #for hyp in prop.block.hypotheses:
@@ -545,6 +569,7 @@ class meta_math_database:  # the database is just a collection of blocks
                 # now reset the counter
                 current = 0
         prop.proof = out # replace the compressed proof with the uncompressed one
+        prop._uncompressed = True
 
     def verify(self,prop, verbose=False):
         # attempt to verify a proof
