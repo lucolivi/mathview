@@ -139,6 +139,18 @@ class proof_step:
         self.context = context  # the proposition that this is being used to prove
         self.vclass = prop.vclass  # wff, class, set, or |-, since this isn't remembered by the tree.
 
+
+        #Made by Lucas
+        if hasattr(tree, "replace_dict_list"):
+            self.replace_dict_list = tree.replace_dict_list
+            #del tree.replace_dict_list
+        else:
+            self.replace_dict_list = []
+
+
+        #--------
+
+
         # properties for generative nn
         self.prop = prop  # the proposition/axiom that was used to derive this step from the previous one(s)
         self.unconstrained = []  # is the trees of the statements corresponding to the unconstrained_f of self.prop
@@ -156,6 +168,8 @@ class proof_step:
         self.descendants = 1 + sum([p.height for p in prior_entails])  # the number of descendants in the proof tree, including this node
 
         self.applicable_propositions = None
+        self._prior_statements = prior_statements
+        self._prior_entails = prior_entails
 
     def summarize(self):
         print("proof step summary:")
@@ -291,7 +305,10 @@ class proposition:
         # Yay!  These are valid contributions
         # now we can return the parse tree for the actual statement with
         # the substitutions added in.
-        return self.tree.copy().replace(replacement_dict)
+        tree_copy = self.tree.copy()
+        #tree_copy._rep_dict = replacement_dict
+        tree_copy.replace_dict_list = [replacement_dict]
+        return tree_copy.replace(replacement_dict)
 
     # Reads though the proof and finds all the optionals that are referenced and includes them
     # in the f statements for the proposition
@@ -304,6 +321,10 @@ class proposition:
     def update_d(self):
         included_vars = set(f.variable for f in self.f.values())
         self.d = set(x for x in self.d if x[0] in included_vars and x[1] in included_vars)
+
+    def uncompress(self):
+        """Implement lazy verification and uncompressing"""
+        pass
 
 class meta_math_database:  # the database is just a collection of blocks
     def __init__(self, file_contents, n=None, remember_proof_steps=True):
@@ -458,7 +479,7 @@ class meta_math_database:  # the database is just a collection of blocks
 
             self.label = None
 
-            return
+            #return
 
             self.uncompress(prop,current_block)  # uncompress the proof
             prop.update_optional_hypotheses(current_block)
@@ -492,6 +513,15 @@ class meta_math_database:  # the database is just a collection of blocks
     def read_theorem(self, label):
         pass
         #implement function to read a given theorem of the set.mm and recursively load its proof
+    
+    def get_proposition(self):
+        """
+        This function will try to get a proposition already in the database. 
+        If it does not exists it will try to load it recursively.
+        """
+        pass
+    #precisa verificar a questao dos blocos de variaveis, se vai ter algum problema. Talvez esses blocos so influenciem na hora 
+    #de provar. para encadear e gerar as expressoes talvez nao precise
     
     def uncompress(self, prop, context):
         #print 'uncompressing'
