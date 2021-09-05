@@ -141,11 +141,11 @@ class proof_step:
 
 
         #Made by Lucas
-        if hasattr(tree, "replace_dict_list"):
-            self.replace_dict_list = tree.replace_dict_list
-            #del tree.replace_dict_list
-        else:
-            self.replace_dict_list = []
+        # if hasattr(tree, "replace_dict_list"):
+        #     self.replace_dict_list = tree.replace_dict_list
+        #     del tree.replace_dict_list
+        # else:
+        #     self.replace_dict_list = []
 
 
         #--------
@@ -306,8 +306,10 @@ class proposition:
         # now we can return the parse tree for the actual statement with
         # the substitutions added in.
         tree_copy = self.tree.copy()
-        #tree_copy._rep_dict = replacement_dict
-        tree_copy.replace_dict_list = [replacement_dict]
+
+        #Copy replacement dict reference for further use in expanding proofs
+        #tree_copy.replace_dict_list = [replacement_dict]
+
         return tree_copy.replace(replacement_dict)
 
     # Reads though the proof and finds all the optionals that are referenced and includes them

@@ -156,6 +156,10 @@ class Tree:
     # modifies the current tree, replacing all the nodes with values in replacement_dictionary
     # with a copy of the subtree indicated by replacement_dictionary
     def replace(self,replacement_dictionary):
+
+        #Copy replacement dict reference for further use in expanding proofs
+        #self.replace_dict_list = [replacement_dictionary]
+
         if self.value in replacement_dictionary:
             self = replacement_dictionary[self.value].copy()
         else:
@@ -194,6 +198,16 @@ class Tree:
         for i in position:
             current=current.leaves[i]
         return current.value
+
+    def tree_at_position(self,position):
+        """
+        Return subtree at given position.
+        By: Lucas V Oliveira
+        """
+        current = self
+        for i in position:
+            current=current.leaves[i]
+        return current
 
     def set_value_at_position(self, position, value):
         current = self
