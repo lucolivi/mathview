@@ -481,8 +481,6 @@ class meta_math_database:  # the database is just a collection of blocks
 
             self.label = None
 
-            #return
-
             self.uncompress(prop,current_block)  # uncompress the proof
             prop.update_optional_hypotheses(current_block)
             if len(self.propositions) % 10 ==0:#print len(self.propositions)#print prop.label #prop.print_details()

@@ -39,7 +39,11 @@ replace_text_dict = {
     "ps": "𝜓",
     "ch": "𝜒",
     "th": "𝜃",
-    "ta": "𝜏"
+    "ta": "𝜏",
+    "et": "η",
+    "ze": "𝜁",
+    "rh": "𝜌",
+    "o.": "∘"
 }
 
 re_str = "|".join(map(re.escape, replace_text_dict.keys()))
