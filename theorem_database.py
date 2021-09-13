@@ -16,14 +16,16 @@ class TheoremDatabase:
         if theorem not in self.database:
             req = requests.get(f"http://us.metamath.org/mpeuni/{theorem}.html")
 
+            if req.status_code == 404:
+                self.database[theorem] = None
+                return None
+
             if req.status_code != 200:
                 return None
     
             html_text = req.text
 
             parsed_theorem = self._parse_theorem(html_text)
-            #parsed_theorem["theorem"] = theorem
-            #parsed_theorem["expression"] = parsed_theorem["steps"][-1]["expression"]
 
             self.database[theorem] = parsed_theorem
 

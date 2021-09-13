@@ -1,9 +1,13 @@
 import requests
 from bs4 import BeautifulSoup
 
+from collections import defaultdict
+
 import json
 
 import pickle
+
+import math
 
 from theorem_database import TheoremDatabase
 
@@ -43,12 +47,54 @@ def get_theorem(theorem):
     #     save_database()
 
     # #return render_template('theorem.html', theorem_obj=json.dumps(theorem_obj))
-    return jsonify(tdb[theorem])
+    theorem_obj = tdb[theorem].copy()
+
+    hyps_dict = defaultdict(list)
+    for source, target, _ in theorem_obj["hyps"]:
+        hyps_dict[source].append(target)
+
+    steps_dict = dict()
+    for step in theorem_obj["steps"]:
+        steps_dict[step["step"]] = step
+
+    for step in theorem_obj["steps"]:
+        get_step_complexity(step, hyps_dict, steps_dict)
+
+    #Generate log complexities
+    for step in theorem_obj["steps"]:
+        step["log_complexity"] = round(math.log(step["step_complexity"]), 5)
+
+    return jsonify(theorem_obj)
+
+def get_step_complexity(step, hyps_dict, steps_dict):
+    """Returns the step complexity which is the sum of the complexities of all its predecessors hypothesis."""
+
+    if "step_complexity" not in step:
+
+        step_theorem = tdb[step["theorem"]]
+
+        if step_theorem:
+            #step["step_complexity"] = step_theorem["complexity"]
+            _step_complexity = step_theorem["complexity"]
+            for child_step_num in hyps_dict[step["step"]]:
+                child_step = steps_dict[child_step_num]
+                _step_complexity += get_step_complexity(child_step, hyps_dict, steps_dict)
+        
+            step["step_complexity"] =  _step_complexity
+
+        else:
+            step["step_complexity"] = 0
+
+    return step["step_complexity"]
+
 
 @app.route("/graph/<theorem>")
 def get_theorem_graph(theorem):
 
-    return render_template('theorem.html', theorem=theorem)
+    theorem_complexity = tdb[theorem]["complexity"]
+    theorem_log_completixy = math.log(theorem_complexity)
+
+    return render_template('theorem.html', theorem=theorem, complexity=theorem_complexity, log_complexity=theorem_log_completixy)
 
 
 # def parse_theorem(htmltext):
