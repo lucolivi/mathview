@@ -62,7 +62,10 @@ def get_theorem(theorem):
 
     #Generate log complexities
     for step in theorem_obj["steps"]:
-        step["log_complexity"] = round(math.log(step["step_complexity"]), 5)
+        if step["step_complexity"] > 0:
+            step["log_complexity"] = round(math.log(step["step_complexity"]), 5)
+        else:
+            step["log_complexity"] = 0
 
     return jsonify(theorem_obj)
 
