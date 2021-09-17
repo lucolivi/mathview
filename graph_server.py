@@ -67,6 +67,11 @@ def get_theorem(theorem):
         else:
             step["log_complexity"] = 0
 
+    #Generate norm complexities
+    final_complexity = theorem_obj["complexity"]
+    for step in theorem_obj["steps"]:
+        step["norm_complexity"] = round(step["step_complexity"] / final_complexity, 5)
+
     return jsonify(theorem_obj)
 
 def get_step_complexity(step, hyps_dict, steps_dict):

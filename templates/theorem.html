@@ -1,0 +1,17 @@
+<html>
+  <head>
+    <title>{{theorem}} - MathView</title>
+  </head>
+  <body>
+    <a href="http://us.metamath.org/mpeuni/{{theorem}}.html" target="_blank"><h1>{{theorem}}</h1></a>
+    <p>Complexity: {{complexity}}</p>
+    <p>Log Complexity: {{log_complexity}}</p>
+    
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="../static/render.js"></script>
+    <script>
+      main("{{theorem}}")
+
+    </script>
+  </body>
+</html>
