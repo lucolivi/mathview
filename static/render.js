@@ -71,10 +71,8 @@ function main(theorem, threshold) {
         });
         
 
-
         //console.log(nodes)
         //console.log(links)
-
 
         //color = "#aaaaaa"
         
@@ -143,7 +141,6 @@ function main(theorem, threshold) {
         //   .join("path")
         //     .attr("stroke", "#999")
         //     .attr("marker-end", "url(#arrows)");
-
 
 
             
