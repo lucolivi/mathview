@@ -68,14 +68,14 @@ def get_theorem(theorem):
             step["log_complexity"] = 0
 
     #Generate norm complexities
-    final_complexity = theorem_obj["complexity"]
+    final_complexity = 1 #theorem_obj["complexity"]
     for step in theorem_obj["steps"]:
         step["norm_complexity"] = round(step["step_complexity"] / final_complexity, 5)
 
     #Insert lemma complexities
     for step in theorem_obj["steps"]:
         if tdb[step["theorem"]]:
-            step["lemma_complexity"] = tdb[step["theorem"]]["complexity"]
+            step["lemma_complexity"] = 1#tdb[step["theorem"]]["complexity"]
             step["lemma_log_complexity"] = round(math.log(step["lemma_complexity"]), 5)
 
     return jsonify(theorem_obj)
@@ -89,13 +89,13 @@ def get_step_complexity(step, hyps_dict, steps_dict):
 
         if step_theorem:
             #step["step_complexity"] = step_theorem["complexity"]
-            _step_complexity = step_theorem["complexity"]
+            _step_complexity = 1#step_theorem["complexity"]
             for child_step_num in hyps_dict[step["step"]]:
                 child_step = steps_dict[child_step_num]
                 _step_complexity += get_step_complexity(child_step, hyps_dict, steps_dict)
         
             step["step_complexity"] =  _step_complexity
-            step["lemma_complexity"] = step_theorem["complexity"]
+            step["lemma_complexity"] = 1#step_theorem["complexity"]
 
         else:
             step["step_complexity"] = 0
@@ -107,7 +107,7 @@ def get_step_complexity(step, hyps_dict, steps_dict):
 @app.route("/graph/<theorem>")
 def get_theorem_graph(theorem):
 
-    theorem_complexity = tdb[theorem]["complexity"]
+    theorem_complexity = 1#tdb[theorem]["complexity"]
     theorem_log_completixy = math.log(theorem_complexity)
 
     return render_template('theorem.html', theorem=theorem, complexity=theorem_complexity, log_complexity=theorem_log_completixy)

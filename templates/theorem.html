@@ -1,0 +1,77 @@
+<html>
+  <head>
+    <title>{{theorem}} - MathView</title>
+  </head>
+  <body>
+    <a href="http://us.metamath.org/mpeuni/{{theorem}}.html" target="_blank"><h1>{{theorem}}</h1></a>
+    <p>Complexity: {{complexity}}</p>
+    <p>Log Complexity: {{log_complexity}}</p>
+
+    <div class="slidecontainer">
+      <input type="range" min="1" max="100" value="50" class="slider" id="myRange">
+      <p>Value: <span id="demo"></span></p>
+    </div>
+    
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="../static/render.js"></script>
+    <script>
+
+      var slider = document.getElementById("myRange");
+      var output = document.getElementById("demo");
+
+      var width = 1500
+      var height = 800
+
+      const svg = d3.select("body")
+        .append("svg")
+        .style("font", "12px sans-serif");
+
+      svg.attr("viewBox", [-width / 2, -height / 2, width, height]);
+
+      const g = svg.append("g");
+
+      const zoom = d3.zoom()
+            .scaleExtent([0.5, 8])
+            .on("zoom", zoomed);
+
+        function zoomed(event) {
+            const {transform} = event;
+            g.attr("transform", transform);
+            g.attr("stroke-width", 1 / transform.k);
+        }
+
+        const types = ["licensing","suit","resolved"];
+        const color = d3.scaleOrdinal(types, d3.schemeCategory10)
+
+          // Per-type markers, as they don't inherit styles.
+        svg.append("defs").append("marker")
+            .attr("id", "arrows")
+            .attr("viewBox", "0 -5 10 10")
+            .attr("refX", 15)
+            .attr("refY", -0.5)
+            .attr("markerWidth", 6)
+            .attr("markerHeight", 6)
+            .attr("orient", "auto")
+            .append("path")
+            .attr("fill", "#aaaaaa")
+            .attr("d", "M0,-5L10,0L0,5");
+
+            
+        svg.call(zoom);
+
+        var link_group = g.append("g")
+        var node_group = g.append("g")
+        
+
+
+      main("{{theorem}}", slider.value / 100)
+      output.innerHTML = slider.value / 100;
+
+      slider.oninput = function() {
+        main("{{theorem}}", slider.value / 100)
+        output.innerHTML = this.value / 100;
+      }
+
+    </script>
+  </body>
+</html>
