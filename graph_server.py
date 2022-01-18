@@ -11,12 +11,21 @@ import math
 
 from theorem_database import TheoremDatabase
 
+import os
 
-from flask import Flask, jsonify, abort, render_template, request
+
+from flask import Flask, jsonify, abort, render_template, request, send_from_directory
 
 app = Flask(__name__, static_url_path='/static')
 
 tdb = TheoremDatabase("tdb")
+
+edges_cnt = pickle.load(open("edges_cnt.pkl", "rb"))
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'),
+                               'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 @app.route("/")
 def hello_world():
@@ -68,15 +77,42 @@ def get_theorem(theorem):
             step["log_complexity"] = 0
 
     #Generate norm complexities
-    final_complexity = 1 #theorem_obj["complexity"]
+    final_complexity = theorem_obj["complexity"]
     for step in theorem_obj["steps"]:
         step["norm_complexity"] = round(step["step_complexity"] / final_complexity, 5)
 
     #Insert lemma complexities
     for step in theorem_obj["steps"]:
         if tdb[step["theorem"]]:
-            step["lemma_complexity"] = 1#tdb[step["theorem"]]["complexity"]
+            step["lemma_complexity"] = tdb[step["theorem"]]["complexity"]
             step["lemma_log_complexity"] = round(math.log(step["lemma_complexity"]), 5)
+
+    #Insert edges counts
+    #Since target theorems do not repeat, store the edge count values using them as keys
+    theorem_edges_cnt = defaultdict(int)
+    for source, targets in hyps_dict.items():
+        source_theorem = steps_dict[source]["theorem"]
+        for target in targets:
+            target_theorem = steps_dict[target]["theorem"]
+            e_cnt = edges_cnt[(source_theorem, target_theorem)]
+            theorem_edges_cnt[target] = e_cnt
+            #print(source_theorem, target_theorem, e_cnt)
+
+    theorem_edges_cnt_sum = sum(theorem_edges_cnt.values())
+
+    for step in theorem_obj["steps"]:
+        step["edge_count"] = theorem_edges_cnt[step["step"]]
+        step["edge_count_norm"] = theorem_edges_cnt[step["step"]] / theorem_edges_cnt_sum
+    
+    #print(theorem_edges_cnt)
+
+    #print(hyps_dict.values())
+    #print(steps_dict)
+    #target_dict = dict()
+    #for source, target, _ in theorem_obj["hyps"]:
+    #    target_dict
+    #    hyps_dict[source].append(target)
+
 
     return jsonify(theorem_obj)
 
@@ -89,13 +125,13 @@ def get_step_complexity(step, hyps_dict, steps_dict):
 
         if step_theorem:
             #step["step_complexity"] = step_theorem["complexity"]
-            _step_complexity = 1#step_theorem["complexity"]
+            _step_complexity = step_theorem["complexity"]
             for child_step_num in hyps_dict[step["step"]]:
                 child_step = steps_dict[child_step_num]
                 _step_complexity += get_step_complexity(child_step, hyps_dict, steps_dict)
         
             step["step_complexity"] =  _step_complexity
-            step["lemma_complexity"] = 1#step_theorem["complexity"]
+            step["lemma_complexity"] = step_theorem["complexity"]
 
         else:
             step["step_complexity"] = 0
@@ -107,7 +143,7 @@ def get_step_complexity(step, hyps_dict, steps_dict):
 @app.route("/graph/<theorem>")
 def get_theorem_graph(theorem):
 
-    theorem_complexity = 1#tdb[theorem]["complexity"]
+    theorem_complexity = tdb[theorem]["complexity"]
     theorem_log_completixy = math.log(theorem_complexity)
 
     return render_template('theorem.html', theorem=theorem, complexity=theorem_complexity, log_complexity=theorem_log_completixy)

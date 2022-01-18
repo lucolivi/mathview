@@ -1,3 +1,6 @@
+//https://bl.ocks.org/d3noob/8375092
+
+
 function main(theorem, threshold) {
     //console.log(threshold)
 
@@ -8,10 +11,11 @@ function main(theorem, threshold) {
         //Filter nodes
         filtered_steps = []
         used_ids = []
+        //console.log(data.steps)
         for(var i in data.steps) {
 
             //Ensure the last node always appear
-            if(i == (data.steps.length - 1) || Math.random() > threshold) {
+            if(i == (data.steps.length - 1) || data.steps[i].edge_count_norm < threshold) {
             //if(['5', '7', '12', '14', '15'].includes(data.steps[i].step)) {
                 filtered_steps.push(data.steps[i])
                 used_ids.push(data.steps[i].step)
@@ -101,7 +105,8 @@ function main(theorem, threshold) {
             .data(nodes, function(d) {
                 //console.log(d)
                 //return d.step
-                return Math.round(Math.random() * 100000)
+                //Use random ID so elements are recreated everytime
+                return Math.round(Math.random() * 10000000)
             })
             .join("g")
             // .join(
@@ -126,11 +131,34 @@ function main(theorem, threshold) {
             .data(links, function(d){
                 //console.log(d)
                 //return d.id
-                return Math.round(Math.random() * 100000)
+                return Math.round(Math.random() * 10000000)
             })
             .join("line")
             .attr("stroke-width", 2)
             .attr("marker-end", "url(#arrows)");
+
+
+        // var link2 = link_group
+        //     .attr("stroke", "#999")
+        //     .attr("fill", "none")
+        //     .attr("stroke-opacity", 0.6)
+        //     // .attr("stroke-linecap", strokeLinecap)
+        //     // .attr("stroke-linejoin", strokeLinejoin)
+        //     .attr("stroke-width", 2)
+        //     .attr("marker-end", "url(#arrows)")
+        //     .selectAll("path")
+        //     .data(links, function(d){
+        //         //console.log(d)
+        //         //return d.id
+        //         return Math.round(Math.random() * 10000000)
+        //     })
+        //     .join("path")
+            
+        //     .attr("d", 
+        //         d3.linkHorizontal()
+        //         .x(d => d.y)
+        //         .y(d => d.x)
+        //     );
             
 
         //     const link = svg.append("g")
@@ -155,11 +183,42 @@ function main(theorem, threshold) {
                 return scale(d.group);
             });
 
+        // node
+        //     .append("rect")
+        //     .attr("width", "300")
+        //     .attr("height", "10")
+        //     .attr("fill", "#ddd")
+        //     .attr("style", "transform:translate(-10%, -5);")
+        //     //.attr("stroke-width", "3")
+        //     //.attr("stroke", "blue")
+
         node
             .append("text")
-            .attr("text-anchor", "middle")
-            .attr("y", "-0.90em")
+            .attr("text-anchor", "left")
+            .attr("y", "-3.0em")
+            .attr("font-weight", "bold")
             .text(d => d.theorem + " " + d.expression);
+        
+        node
+            .append("text")
+            .attr("text-anchor", "left")
+            .attr("y", "-2.0em")
+            .attr("font-size", "smaller")
+            .text(d => "NormComp: " + d.norm_complexity);
+
+        node
+            .append("text")
+            .attr("text-anchor", "left")
+            .attr("y", "-1.0em")
+            .attr("font-size", "smaller")
+            .text(d => "LogComp: " + d.log_complexity);
+
+        node
+            .append("text")
+            .attr("text-anchor", "left")
+            .attr("y", "-0.0em")
+            .attr("font-size", "smaller")
+            .text(d => "EdgeCntNorm: " + d.edge_count_norm);
             
 
         // node.append("text")
@@ -189,6 +248,16 @@ function main(theorem, threshold) {
                 .attr("y1", d => d.source.y)
                 .attr("x2", d => d.target.x)
                 .attr("y2", d => d.target.y);
+
+            // link2
+            //     .attr("d", 
+            //         d3.linkVertical()
+            //             .x(d => d.x)
+            //             .y(d => d.y)
+            //     );
+
+
+
             node.attr("transform", d => `translate(${d.x},${d.y})`);
             // node
             //     .attr("cx", d => d.x)
