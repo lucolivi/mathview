@@ -148,6 +148,14 @@ def get_theorem_graph(theorem):
 
     return render_template('theorem.html', theorem=theorem, complexity=theorem_complexity, log_complexity=theorem_log_completixy)
 
+@app.route("/graphtree/<theorem>")
+def get_theorem_graph_tree(theorem):
+
+    theorem_complexity = tdb[theorem]["complexity"]
+    theorem_log_completixy = math.log(theorem_complexity)
+
+    return render_template('graphtree.html', theorem=theorem, complexity=theorem_complexity, log_complexity=theorem_log_completixy)
+
 
 @app.route("/linear/<theorem>")
 def get_theorem_linear(theorem):
