@@ -34,7 +34,7 @@
 
 
       <div class="slidecontainer">
-        <input type="range" min="1" max="100" value="50" class="slider" id="myRange">
+        <input type="range" min="1" max="101" value="101" class="slider" id="myRange">
         <p>Value: <span id="demo"></span></p>
       </div>
 
@@ -60,7 +60,7 @@
       const g = svg.append("g");
 
       const zoom = d3.zoom()
-            .scaleExtent([0.5, 8])
+            .scaleExtent([0.1, 8])
             .on("zoom", zoomed);
 
         function zoomed(event) {
@@ -88,18 +88,23 @@
             
         svg.call(zoom);
 
-        var link_group = g.append("g")
-        var node_group = g.append("g")
+        //var link_group = g.append("g")
+        //var node_group = g.append("g")
+
+
+        d3.json("../theorem/{{theorem}}").then(data => {
+          main(data, slider.value / 100)
+          output.innerHTML = slider.value / 100;
+
+          slider.oninput = function() {
+            main(data, slider.value / 100)
+            output.innerHTML = this.value / 100;
+          }
+        });
         
 
 
-      main("{{theorem}}", slider.value / 100)
-      output.innerHTML = slider.value / 100;
 
-      slider.oninput = function() {
-        main("{{theorem}}", slider.value / 100)
-        output.innerHTML = this.value / 100;
-      }
 
     </script>
   </body>

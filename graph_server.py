@@ -94,7 +94,8 @@ def get_theorem(theorem):
         source_theorem = steps_dict[source]["theorem"]
         for target in targets:
             target_theorem = steps_dict[target]["theorem"]
-            e_cnt = edges_cnt[(source_theorem, target_theorem)]
+            e_cnt = max(edges_cnt[(source_theorem, target_theorem)], 1) #Put minimum of 1 here to prevent return null edges
+            print("ecnt", e_cnt)
             theorem_edges_cnt[target] = e_cnt
             #print(source_theorem, target_theorem, e_cnt)
 

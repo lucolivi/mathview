@@ -1,65 +1,171 @@
 //https://bl.ocks.org/d3noob/8375092
 
+// function filterNodes(data, threshold) {
+//     //Filter nodes
+//     filtered_steps = []
+//     used_ids = []
+//     //console.log(data.steps)
+//     for(var i in data.steps) {
 
-function main(theorem, threshold) {
+//         //Ensure the last node always appear
+//         if(i == (data.steps.length - 1) || data.steps[i].edge_count_norm < threshold) {
+//         //if(['5', '7', '12', '14', '15'].includes(data.steps[i].step)) {
+//             filtered_steps.push(data.steps[i])
+//             used_ids.push(data.steps[i].step)
+//         }
+//     }
+
+
+// }
+
+
+
+
+function main(data, threshold) {
     //console.log(threshold)
 
-    d3.json("../theorem/" + theorem).then(data => {
+    //d3.json("../theorem/" + theorem).then(data => {
 
-        console.log(data)
+        //console.log(data)
+
+        //Filter nodes
+        filtered_steps = []
+        used_ids = []
+        //console.log(data.steps)
+        for(var i in data.steps) {
+
+            //Ensure the last node always appear
+            if(true || i == (data.steps.length - 1) || data.steps[i].edge_count_norm < threshold) {
+            //if(['5', '7', '12', '14', '15'].includes(data.steps[i].step)) {
+                filtered_steps.push(data.steps[i])
+                used_ids.push(data.steps[i].step)
+            }
+        }
+
+        //used_ids = ['2', '3', '5', '6', '7', '8', '9', '10', '12', '15']
+        //console.log(used_ids)
+
+        //Regenerate links according to the used ids
+
+        hyps_dict = {}
+        for(var i in data.hyps) {
+            hyp = data.hyps[i]
+            hyps_dict[hyp[1]] = hyp[0]
+        }
+
+        filtered_hyps = []
+        for(var i in data.hyps) {
+            source = data.hyps[i][0]
+            target = data.hyps[i][1]
+            
+            if(used_ids.includes(target)) {
+                while(!(used_ids.includes(source))) {
+                    source = hyps_dict[source]
+                    if(source == undefined)
+                        break
+                }
+
+                filtered_hyps.push([i, source, target])
+            }
+
+        }
+
+        //console.log(filtered_steps)
+       //console.log(filtered_hyps)
+
+
+
 
         //Create treeData
         var nodesDict = {}
-        for(var i in data.steps) {
-            nodesDict[data.steps[i].step] = data.steps[i]
-            data.steps[i].children = []
-            data.steps[i].name = data.steps[i].step
-            data.steps[i].parent = null
+        //for(var i in data.steps) {
+        for(var i in filtered_steps) {
+            nodesDict[filtered_steps[i].step] = filtered_steps[i]
+            filtered_steps[i].children = []
+            filtered_steps[i].name = filtered_steps[i].step
+            filtered_steps[i].parent = null
         }
 
-        for(var i in data.hyps) {
-            var source = data.hyps[i][0]
-            var target = data.hyps[i][1]
+        //console.log(nodesDict)
+
+        //for(var i in data.hyps) {
+        for(var i in filtered_hyps) {
+            var source = filtered_hyps[i][1]
+            var target = filtered_hyps[i][2]
+            //console.log(source, target)
             nodesDict[source].children.push(nodesDict[target])
             nodesDict[target].parent = nodesDict[source].name
         }
 
-        treeData = []
-        for(var i in data.steps)
-            if(data.steps[i].parent == null)
-                treeData.push(data.steps[i])
 
-        console.log(treeData)
+
+        // const nodes =  filtered_steps.map(function(d) {
+        //     d.id = d.step
+
+        //     // d.get_id = function() {
+        //     //     return this.id
+        //     // }
+
+        //     //console.log(d)
+        //     return Object.create(d)
+        // });
+
+
+        // const links = filtered_hyps.map(function(d) {
+        //     var linkObj = {
+        //         "id":d[0],
+        //         "source":d[2],
+        //         "target":d[1]
+        //     }
+
+        //     return Object.create(linkObj)
+        // });
+        
+
+        // console.log(nodes)
+        // console.log(links)
+
+
+
+        treeData = []
+        for(var i in filtered_steps)
+            if(filtered_steps[i].parent == null)
+                treeData.push(filtered_steps[i])
+
+        //console.log(treeData)
 
         // ************** Generate the tree diagram	 *****************
-        var margin = {top: 20, right: 120, bottom: 20, left: 120},
-        width = 960 - margin.right - margin.left,
-        height = 500 - margin.top - margin.bottom;
+        // var margin = {top: 20, right: 120, bottom: 20, left: 120},
+        // width = 960 - margin.right - margin.left,
+        // height = 500 - margin.top - margin.bottom;
 
-        var i = 0;
-        var duration = 750;
-        //var root;
+        // var i = 0;
+        // var duration = 750;
+        
 
-        var tree = d3.tree().size([height, width]);
+
+        var tree = d3.tree().nodeSize([200, 100]);
+
+        var root = d3.hierarchy(treeData[0]);
+
+        tree(root)
         
         //var diagonal = d3.svg.diagonal()
 	        //.projection(function(d) { return [d.y, d.x]; });
 
-        var diagonal = d3.linkHorizontal()
-            .x(function(d) { return d.y; })
-            .y(function(d) { return d.x; })
+        // var diagonal = d3.linkHorizontal()
+        //     .x(function(d) { return d.y; })
+        //     .y(function(d) { return d.x; })
 
-        var svg = d3.select("body").append("svg")
-            .attr("width", width + margin.right + margin.left)
-            .attr("height", height + margin.top + margin.bottom)
-            .append("g")
-            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        // var svg = d3.select("body").append("svg")
+        //     .attr("width", width + margin.right + margin.left)
+        //     .attr("height", height + margin.top + margin.bottom)
+        //     .append("g")
+        //     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-        root = d3.hierarchy(treeData[0]);
         //root.x0 = height / 2;
         //root.y0 = 0;
 
-        console.log(tree(root))
 
           
         //update(root);
@@ -70,70 +176,207 @@ function main(theorem, threshold) {
         //     .data(root.descendants())
         //     .join("a")
 
-        var node123 = node_group
-            //.attr("fill", "#aaaaaa")
-            //.attr("stroke-linecap", "round")
-            //.attr("stroke-linejoin", "round")
-            .selectAll("g")
-            .data(root.descendants(), function(d) {
-                //console.log(d)
-                //return d.step
-                //Use random ID so elements are recreated everytime
-                return Math.round(Math.random() * 10000000)
-            })
-            .join("g")
-            .attr("transform", d => `translate(${d.x},${d.y})`);
+        update_nodes(root)
 
-        node123.append("circle")
-            .attr("stroke", "white")
-            .attr("stroke-width", 1.5)
-            .attr("r", 10)
-            .attr("fill", function(d){
-                const scale = d3.scaleOrdinal(d3.schemeCategory10);
-                return scale(d.group);
-            })
+        function update_nodes(root) {
+            var link123 = g
+                .selectAll("line")
+                .data(root.links(), function(d){
+                    //console.log(d)
+                    //return d.id
+                    return Math.round(Math.random() * 10000000)
+                })
+                .join("line")
+                .attr("stroke", "#999")
+                .attr("stroke-opacity", 0.6)
+                .attr("stroke-width", 2)
+                .attr("marker-end", "url(#arrows)");
+
+            link123
+                .attr("x2", d => d.source.x)
+                .attr("y2", d => d.source.y)
+                .attr("x1", d => d.target.x)
+                .attr("y1", d => d.target.y);
+
+            node_y_offset = 1
+            node_x_offset = -0.5
+            node_anchor = "left"
+
+            var node123 = g
+                //.attr("fill", "#aaaaaa")
+                //.attr("stroke-linecap", "round")
+                //.attr("stroke-linejoin", "round")
+                .selectAll("g")
+                .data(root.descendants(), function(d) {
+                    //console.log(d)
+                    //return d.step
+                    //Use random ID so elements are recreated everytime
+                    return d.data.step//Math.round(Math.random() * 10000000)
+                })
+                //.join("g")
+                .join(
+                    function (enter) {
+                        n_group = enter
+                            .append("g")
+                            .style("opacity", 1.0)
+                            .attr("transform", d => `translate(${d.x},${d.y})`);
+
+                        n_group
+                            .append("circle")
+                            .attr("stroke", "white")
+                            .attr("stroke-width", 1.5)
+                            .attr("r", 10)
+                            .attr("fill", function(d){
+                                return "#aaaaff"
+                                //const scale = d3.scaleOrdinal(d3.schemeCategory10);
+                                //return scale(d.group);
+                            })
+                            
+
+                            n_group
+                            .append("text")
+                            .attr("text-anchor", node_anchor)
+                            //.attr("y", "-3.0em")
+                            .attr("y", -4 + node_y_offset + "em")
+                            .attr("x", node_x_offset + "em")
+                            .attr("font-weight", "bold")
+                            //.text(d => d.data.theorem + " " + d.data.expression);
+                            .text(d => d.data.theorem);
             
+                        n_group
+                            .append("text")
+                            .attr("text-anchor", node_anchor)
+                            //.attr("y", "-3.0em")
+                            .attr("y", -3 + node_y_offset + "em")
+                            .attr("x", node_x_offset + "em")
+                            .attr("font-weight", "bold")
+                            //.text(d => d.data.theorem + " " + d.data.expression);
+                            .text(d => d.data.expression);
+                        
+                        n_group
+                            .append("text")
+                            .attr("text-anchor", node_anchor)
+                            .attr("y", -2 + node_y_offset + "em")
+                            .attr("x", node_x_offset + "em")
+                            .attr("font-size", "smaller")
+                            .text(d => "NormComp: " + d.data.norm_complexity);
+                
+                        n_group
+                            .append("text")
+                            .attr("text-anchor", node_anchor)
+                            .attr("y", -1 + node_y_offset + "em")
+                            .attr("x", node_x_offset + "em")
+                            .attr("font-size", "smaller")
+                            .text(d => "LogComp: " + d.data.log_complexity);
+                
+                        n_group
+                            .append("text")
+                            .attr("text-anchor", node_anchor)
+                            .attr("y", -0 + node_y_offset + "em")
+                            .attr("x", node_x_offset + "em")
+                            .attr("font-size", "smaller")
+                            .text(d => "EdgeCntNorm: " + d.data.edge_count_norm);
 
-        node123
-            .append("text")
-            .attr("text-anchor", "left")
-            .attr("y", "-3.0em")
-            .attr("font-weight", "bold")
-            .text(d => d.data.theorem + " " + d.data.expression);
+                        return n_group;
+                    },
+                    function (update){
+                        update
+                            .transition()
+                            .duration(500)
+                            .style("opacity", function(d) {
+                                //console.log(d)
 
+                                if(d.data.edge_count_norm < threshold)
+                                    return 1.0
+                                else
+                                    return 0.0
+                            })
 
-        var link123 = link_group
-            .attr("stroke", "#999")
-            .attr("stroke-opacity", 0.6)
-            .selectAll("line")
-            .data(root.links(), function(d){
-                //console.log(d)
-                //return d.id
-                return Math.round(Math.random() * 10000000)
-            })
-            .join("line")
-            .attr("stroke-width", 2)
-            .attr("marker-end", "url(#arrows)");
+                        return update;
+                    
+                    },
+                    function (exit) {
+                        exit
+                            .transition()
+                            .duration(1000)
+                            //.attr("opacity", 0)
+                            .style("opacity", 0.0)
+                            .remove()
+                        return exit;
+                    }
+                )
 
-        link123
-            .attr("x2", d => d.source.x)
-            .attr("y2", d => d.source.y)
-            .attr("x1", d => d.target.x)
-            .attr("y1", d => d.target.y);
+                // .transition()
+                // .duration(1000)
+                // .attr("transform", d => `translate(${d.x},${d.y})`);
+
+            // node123
+            //     .append("circle")
+            //     .attr("stroke", "white")
+            //     .attr("stroke-width", 1.5)
+            //     .attr("r", 10)
+            //     .attr("fill", function(d){
+            //         return "#aaaaff"
+            //         //const scale = d3.scaleOrdinal(d3.schemeCategory10);
+            //         //return scale(d.group);
+            //     })
+                
+
+            // node123
+            //     .append("text")
+            //     .attr("text-anchor", node_anchor)
+            //     //.attr("y", "-3.0em")
+            //     .attr("y", -4 + node_y_offset + "em")
+            //     .attr("x", node_x_offset + "em")
+            //     .attr("font-weight", "bold")
+            //     //.text(d => d.data.theorem + " " + d.data.expression);
+            //     .text(d => d.data.theorem);
+
+            // node123
+            //     .append("text")
+            //     .attr("text-anchor", node_anchor)
+            //     //.attr("y", "-3.0em")
+            //     .attr("y", -3 + node_y_offset + "em")
+            //     .attr("x", node_x_offset + "em")
+            //     .attr("font-weight", "bold")
+            //     //.text(d => d.data.theorem + " " + d.data.expression);
+            //     .text(d => d.data.expression);
+            
+            // node123
+            //     .append("text")
+            //     .attr("text-anchor", node_anchor)
+            //     .attr("y", -2 + node_y_offset + "em")
+            //     .attr("x", node_x_offset + "em")
+            //     .attr("font-size", "smaller")
+            //     .text(d => "NormComp: " + d.data.norm_complexity);
+    
+            // node123
+            //     .append("text")
+            //     .attr("text-anchor", node_anchor)
+            //     .attr("y", -1 + node_y_offset + "em")
+            //     .attr("x", node_x_offset + "em")
+            //     .attr("font-size", "smaller")
+            //     .text(d => "LogComp: " + d.data.log_complexity);
+    
+            // node123
+            //     .append("text")
+            //     .attr("text-anchor", node_anchor)
+            //     .attr("y", -0 + node_y_offset + "em")
+            //     .attr("x", node_x_offset + "em")
+            //     .attr("font-size", "smaller")
+            //     .text(d => "EdgeCntNorm: " + d.data.edge_count_norm);
+
+        }
 
 
         function update(source) {
 
             //tree(root)
 
-            return
-
             // Compute the new tree layout.
             var nodes = tree.nodes(root).reverse()
             var links = tree.links(nodes);
 
-            return
-          
             // Normalize for fixed-depth.
             nodes.forEach(function(d) { d.y = d.depth * 180; });
           
@@ -492,7 +735,7 @@ function main(theorem, threshold) {
 
         */
 
-    });
+    //});
 }
 
 color = {
