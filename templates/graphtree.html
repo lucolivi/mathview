@@ -38,6 +38,11 @@
         <p>Value: <span id="demo"></span></p>
       </div>
 
+      <div id="thresbut">
+
+      </div>
+
+
   </div>
     
     <!-- <script src="https://d3js.org/d3.v7.min.js"></script> -->
@@ -93,6 +98,41 @@
 
 
         d3.json("../theorem/{{theorem}}").then(data => {
+
+          console.log(data)
+
+          thres_values = new Set()
+
+          for(var i in data.steps) {
+            thres_values.add(data.steps[i].edge_count_norm)
+            //thres_values.add(roundDecimals(data.steps[i].edge_count_norm, 5))
+          }
+
+          thres_values = Array.from(thres_values).sort().reverse()
+
+          var level_indicator = d3.select("#thresbut")
+            .append("p")
+            .text("Granularity Level 0")
+
+          d3.select("#thresbut")
+            .selectAll("div")
+            .data(thres_values)
+            .join("div")
+            .append("button")
+            .text(function(d, i) {
+               //return "Threshold: " + d;
+               return "Granularity Level " + i
+            })
+            .on("click", function(e, d) {
+              //level_indicator.text("Granularity Level " + i)
+              slider.value = Math.round(d*100)
+              output.innerHTML = slider.value / 100;
+              main(data, d+Number.EPSILON)
+            });
+
+
+          console.log(thres_values)
+
           main(data, slider.value / 100)
           output.innerHTML = slider.value / 100;
 
@@ -100,8 +140,15 @@
             main(data, slider.value / 100)
             output.innerHTML = this.value / 100;
           }
+
+
+
+
         });
         
+        function roundDecimals(value, decimals) {
+          return Math.round((value + Number.EPSILON) * Math.pow(10, decimals)) / Math.pow(10, decimals)
+        }
 
 
 
