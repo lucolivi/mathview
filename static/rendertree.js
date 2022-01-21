@@ -179,7 +179,10 @@ function main(data, threshold) {
         update_nodes(root)
 
         function update_nodes(root) {
-            var link123 = g
+
+            var showDetails = false
+
+            var link123 = g.select("#links-group")
                 .selectAll("line")
                 .data(root.links(), function(d){
                     //console.log(d)
@@ -202,7 +205,7 @@ function main(data, threshold) {
             node_x_offset = -0.5
             node_anchor = "left"
 
-            var node123 = g
+            var node123 = g.select("#nodes-group")
                 //.attr("fill", "#aaaaaa")
                 //.attr("stroke-linecap", "round")
                 //.attr("stroke-linejoin", "round")
@@ -233,7 +236,7 @@ function main(data, threshold) {
                             })
                             
 
-                            n_group
+                        n_group
                             .append("text")
                             .attr("text-anchor", node_anchor)
                             //.attr("y", "-3.0em")
@@ -253,29 +256,31 @@ function main(data, threshold) {
                             //.text(d => d.data.theorem + " " + d.data.expression);
                             .text(d => d.data.expression);
                         
-                        n_group
-                            .append("text")
-                            .attr("text-anchor", node_anchor)
-                            .attr("y", -2 + node_y_offset + "em")
-                            .attr("x", node_x_offset + "em")
-                            .attr("font-size", "smaller")
-                            .text(d => "NormComp: " + d.data.norm_complexity);
-                
-                        n_group
-                            .append("text")
-                            .attr("text-anchor", node_anchor)
-                            .attr("y", -1 + node_y_offset + "em")
-                            .attr("x", node_x_offset + "em")
-                            .attr("font-size", "smaller")
-                            .text(d => "LogComp: " + d.data.log_complexity);
-                
-                        n_group
-                            .append("text")
-                            .attr("text-anchor", node_anchor)
-                            .attr("y", -0 + node_y_offset + "em")
-                            .attr("x", node_x_offset + "em")
-                            .attr("font-size", "smaller")
-                            .text(d => "EdgeCntNorm: " + d.data.edge_count_norm);
+                        if(showDetails) {
+                            n_group
+                                .append("text")
+                                .attr("text-anchor", node_anchor)
+                                .attr("y", -2 + node_y_offset + "em")
+                                .attr("x", node_x_offset + "em")
+                                .attr("font-size", "smaller")
+                                .text(d => "NormComp: " + d.data.norm_complexity);
+                    
+                            n_group
+                                .append("text")
+                                .attr("text-anchor", node_anchor)
+                                .attr("y", -1 + node_y_offset + "em")
+                                .attr("x", node_x_offset + "em")
+                                .attr("font-size", "smaller")
+                                .text(d => "LogComp: " + d.data.log_complexity);
+                    
+                            n_group
+                                .append("text")
+                                .attr("text-anchor", node_anchor)
+                                .attr("y", -0 + node_y_offset + "em")
+                                .attr("x", node_x_offset + "em")
+                                .attr("font-size", "smaller")
+                                .text(d => "EdgeCntNorm: " + d.data.edge_count_norm);
+                        }
 
                         return n_group;
                     },
@@ -370,6 +375,8 @@ function main(data, threshold) {
 
 
         function update(source) {
+
+            
 
             //tree(root)
 
