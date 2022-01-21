@@ -180,7 +180,7 @@ function main(data, threshold) {
 
         function update_nodes(root) {
 
-            var showDetails = false
+            var showDetails = true
 
             var link123 = g.select("#links-group")
                 .selectAll("line")
@@ -280,6 +280,14 @@ function main(data, threshold) {
                                 .attr("x", node_x_offset + "em")
                                 .attr("font-size", "smaller")
                                 .text(d => "EdgeCntNorm: " + d.data.edge_count_norm);
+
+                            n_group
+                                .append("text")
+                                .attr("text-anchor", node_anchor)
+                                .attr("y", 1 + node_y_offset + "em")
+                                .attr("x", node_x_offset + "em")
+                                .attr("font-size", "smaller")
+                                .text(d => "EdgeCnt: " + d.data.edge_count);
                         }
 
                         return n_group;
