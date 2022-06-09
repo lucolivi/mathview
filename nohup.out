@@ -1,0 +1,21 @@
+ * Serving Flask app "graph_server" (lazy loading)
+ * Environment: production
+   WARNING: This is a development server. Do not use it in a production deployment.
+   Use a production WSGI server instead.
+ * Debug mode: on
+ * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 602-491-333
+Traceback (most recent call last):
+  File "/Volumes/Google Drive/My Drive/UFABC/Pesquisa/Community Detection for Granularity/mathview/graph_server.py", line 223, in <module>
+    app.run(debug=True)
+  File "/Users/lucasvoliveira/opt/anaconda3/envs/mathview/lib/python3.9/site-packages/flask/app.py", line 990, in run
+    run_simple(host, port, self, **options)
+  File "/Users/lucasvoliveira/opt/anaconda3/envs/mathview/lib/python3.9/site-packages/werkzeug/serving.py", line 1000, in run_simple
+    _rwr(
+  File "/Users/lucasvoliveira/opt/anaconda3/envs/mathview/lib/python3.9/site-packages/werkzeug/_reloader.py", line 418, in run_with_reloader
+    ensure_echo_on()
+  File "/Users/lucasvoliveira/opt/anaconda3/envs/mathview/lib/python3.9/site-packages/werkzeug/_reloader.py", line 398, in ensure_echo_on
+    termios.tcsetattr(sys.stdin, termios.TCSANOW, attributes)
+termios.error: (4, 'Interrupted system call')

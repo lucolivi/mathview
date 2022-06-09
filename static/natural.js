@@ -55,6 +55,10 @@ function main(theorem) {
         const thres = parseInt(urlParams.get('t'))
 
 
+        // function print_natural_language
+
+
+
         d3.select("body").append("div")
             .selectAll("p")
                 .data(nodes)
@@ -67,9 +71,14 @@ function main(theorem) {
                 //     if(d.lemma_log_complexity >= thres)
                 //         return "bold"
                 // })
-                .text(d => "[" + (hyps_dict[d.step] || "") + "] " + d.step + " - " + d.theorem + " " + d.expression + " - " + d.lemma_log_complexity)
+                .text(d => d.expression.substr(2) + " (" + d.lemma_log_complexity + ")")
+                // .text(d => "[" + (hyps_dict[d.step] || "") + "] " + d.step + " - " + d.theorem + " " + d.expression + " - " + d.lemma_log_complexity)
 
-        // const svg = d3.select("body").append("svg")
+        
+        
+        
+        
+                // const svg = d3.select("body").append("svg")
         //     .style("font", "12px sans-serif");
 
         // const g = svg.append("g");

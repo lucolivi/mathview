@@ -95,7 +95,7 @@ def get_theorem(theorem):
         for target in targets:
             target_theorem = steps_dict[target]["theorem"]
             e_cnt = max(edges_cnt[(source_theorem, target_theorem)], 1) #Put minimum of 1 here to prevent return null edges
-            print("ecnt", e_cnt)
+            #print("ecnt", e_cnt)
             theorem_edges_cnt[target] = e_cnt
             #print(source_theorem, target_theorem, e_cnt)
 
@@ -166,6 +166,14 @@ def get_theorem_linear(theorem):
 
     return render_template('linear.html', theorem=theorem, complexity=theorem_complexity, log_complexity=theorem_log_completixy)
 
+@app.route("/natural/<theorem>")
+def get_theorem_natural(theorem):
+
+    theorem_complexity = tdb[theorem]["complexity"]
+    theorem_log_completixy = math.log(theorem_complexity)
+
+    return render_template('natural.html', theorem=theorem, complexity=theorem_complexity, log_complexity=theorem_log_completixy)
+
 
 # def parse_theorem(htmltext):
 #     soup = BeautifulSoup(htmltext)
@@ -212,4 +220,4 @@ def get_theorem_linear(theorem):
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, port=5002)

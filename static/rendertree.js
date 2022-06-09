@@ -144,7 +144,7 @@ function main(data, threshold) {
         
 
 
-        var tree = d3.tree().nodeSize([200, 100]);
+        var tree = d3.tree().nodeSize([250, 100]);
 
         var root = d3.hierarchy(treeData[0]);
 
@@ -180,7 +180,7 @@ function main(data, threshold) {
 
         function update_nodes(root) {
 
-            var showDetails = true
+            var showDetails = window.location.search.substr(1) == "details"
 
             var link123 = g.select("#links-group")
                 .selectAll("line")
@@ -201,7 +201,7 @@ function main(data, threshold) {
                 .attr("x1", d => d.target.x)
                 .attr("y1", d => d.target.y);
 
-            node_y_offset = 1
+            node_y_offset = showDetails ? 1 : 2
             node_x_offset = -0.5
             node_anchor = "left"
 

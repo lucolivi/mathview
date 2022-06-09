@@ -40,7 +40,7 @@ def split_compressed_proof(list):
 
 
 class file_contents:
-    def __init__(self):
+    def __init__(self, initial_file_name="set.mm"):
         self.included_files = set()
         self.tokens = []
         self.input_file(initial_file_name)

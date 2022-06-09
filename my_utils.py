@@ -1,5 +1,5 @@
 import networkx as nx
-import matplotlib.pyplot as plt
+
 from networkx.drawing.nx_pydot import graphviz_layout
 
 from adapt_utils import replace_symbols
@@ -96,6 +96,7 @@ def get_proof_steps_graph(p, database):
     return G, root
 
 def print_proof_props_graph(p, database):
+    import matplotlib.pyplot as plt
 
     G, root = get_proof_graph(p, database)
 
@@ -146,6 +147,7 @@ def print_proof_linear_steps(p, database):
 
 
 def print_proof_steps_graph(G, root, figsize=(30,10), node_size=3000):
+    import matplotlib.pyplot as plt
 
     graph_nodes = list(nx.dfs_preorder_nodes(G, root, 9))
 
