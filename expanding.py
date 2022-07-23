@@ -177,44 +177,7 @@ def get_prop_hyps(prop):
     #because if the prop is already a hypothesis, this property will not exist
     #which will raise an exception. This encapsulates and resolves this
     return prop.hyps if hasattr(prop, "hyps") else []
-
-def _old_expand_proof_step(root_step):
-    
-    expanded_steps = []
-    
-    if not hasattr(root_step, "replace_dict_list"):
-        root_step.replace_dict_list = [get_step_replace_dict(root_step)]
-        
-    step2exp = dict() #Store references from steps to expanded steps to populate 
-    
-    for child_step in root_step.prop.entails_proof_steps:
-        #Take the original prop tree
-        exp_tree = child_step.prop.tree.copy()
-        
-        #Take the step transformation that was used to the raw step to the replace step
-        replace_dict_list = [get_step_replace_dict(child_step)]
-            
-        #Get the root step replace dicts so we can iterativelly expand the steps
-        replace_dict_list.extend(root_step.replace_dict_list)
-        
-        for rep_dict in replace_dict_list:
-            exp_tree = exp_tree.replace(rep_dict)
-        
-        prior_statements = child_step.prior_statements if hasattr(child_step, "prior_statements") else []
-        
-        exp_step = proof_step(exp_tree, root_step.context, child_step.prop, prior_statements)
-        exp_step.replace_dict_list = replace_dict_list
-        
-        expanded_steps.append(exp_step)
-        
-        step2exp[child_step] = exp_step
-        
-    #Populate _prior_entails
-    for child_step in root_step.prop.entails_proof_steps:
-        step2exp[child_step]._prior_entails = [step2exp.get(cc, cc) for cc in child_step._prior_entails]
-    
-        
-    return expanded_steps
+  
 
 
 class PStep:
@@ -271,6 +234,9 @@ class PStep:
         return cp_psstep
     
     def expand(self):
+        if self.is_hyp:
+            return self.get_root_step()
+
         exp_self = expand_proof_step_ps(self)
         
         if exp_self == None: #No more expansions are possible
@@ -305,6 +271,7 @@ def _construct_proof_recursive(s):
     for child_s in s._prior_entails:
         child_ps = _construct_proof_recursive(child_s)
         ps.inputs.append(child_ps)
+        child_ps.output = ps
     return ps
 
 def replace_expanded_step(step, expanded_step):
