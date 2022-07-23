@@ -222,7 +222,16 @@ function main(data, threshold) {
                         n_group = enter
                             .append("g")
                             .style("opacity", 1.0)
-                            .attr("transform", d => `translate(${d.x},${d.y})`);
+                            .attr("transform", d => `translate(${d.x},${d.y})`)
+                            .style("cursor", "pointer")
+                            .on("click", function(e, d) {
+                                //console.log(d.data)
+                                //console.log(window.location)
+                                if(window.location.search == "")
+                                    window.location.href = window.location.href + "?expansions_ids=" + d.data.step;
+                                else
+                                    window.location.href = window.location.href + ";" + d.data.step;
+                            });
 
                         n_group
                             .append("circle")
@@ -244,7 +253,7 @@ function main(data, threshold) {
                             .attr("x", node_x_offset + "em")
                             .attr("font-weight", "bold")
                             //.text(d => d.data.theorem + " " + d.data.expression);
-                            .text(d => d.data.theorem);
+                            .text(d => "[" + d.data.step + "] - " +  d.data.theorem);
             
                         n_group
                             .append("text")
