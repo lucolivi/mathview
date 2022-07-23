@@ -153,7 +153,7 @@ def get_step_replace_dict(step):
             if raw_subtree.value != rep_subtree.value:
                 repdict[raw_subtree.value] = rep_subtree
 
-    if len(e_hyps) == 0 or True:
+    if len(e_hyps) == 0:
         #Populate with conclusion (this is necessary when there is no hypothesis)
         raw_tree = step.prop.tree
         rep_tree = step.tree
@@ -286,7 +286,7 @@ class PStep:
     
     def __repr__(self):
         obj_name = "PStep" if not self.is_hyp else "PHyp"
-        return f"<P{obj_name}:{self._step.prop.label} ⊢ {self.statement}>"
+        return f"<{obj_name}:{self._step.prop.label} ⊢ {self.statement}>"
     
     def print_graph(self):
         print_proof_props_graph_pn(self)
@@ -322,10 +322,16 @@ def replace_expanded_step(step, expanded_step):
     #Since there may be use of the same declared hypothesis twice (like in bitri proof)
     #We need to handle this assigning hyps to a dict
     exp_hyps_dict = defaultdict(list)
-    exp_hyps_list = [] #We have to use this list to preserve the order where the hyps appear
+    
+    #We have to take the list of hypothesis this way so we can make sure the 
+    #proper order is maintained with the original step inputs order.
+    #Using the order returned by the depth first search in expanded_step.get_hyps() 
+    #may return problematic orders like in the case of mp2 proposition in the impbii proof
+    #This will also work as a sanity checker since we are getting hypothesis labels from diferent
+    #places that are expected to match.
+    exp_hyps_list = [h.label for h in step._step.prop.hyps if h.type == "e"]
+    
     for exp_hyp in expanded_step_hyps:
-        if exp_hyp.label not in exp_hyps_list: 
-            exp_hyps_list.append(exp_hyp.label)
         exp_hyps_dict[exp_hyp.label].append(exp_hyp)
     
     assert len(step.inputs) == len(exp_hyps_list), f"{len(step.inputs)} {step.inputs} {len(exp_hyps_list)} {exp_hyps_list} {len(exp_hyps_dict)} {exp_hyps_dict}"
