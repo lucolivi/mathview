@@ -249,6 +249,10 @@ class PStep:
     @property
     def statement(self):
         return tree2str(self.tree)
+
+    @property
+    def prop_statement(self):
+        return tree2str(self.prop.tree)
     
     def __repr__(self):
         obj_name = "PStep" if not self.is_hyp else "PHyp"

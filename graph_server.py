@@ -65,6 +65,11 @@ def get_proof_steps_list_df(root_step, _ps_list=None):
 def debug_get():
     return jsonify(request.args)
 
+@app.route("/theorem_list")
+def get_theorem_list_from_db():
+    return "<br>".join([f'<a href="../graphtree_exp/{p.label}">{p.label}</a>'  for p in database.propositions_list if p.vclass == "|-"])
+
+
 @app.route("/theorem_db_exp/<theorem>")
 def get_theorem_from_db_exp(theorem):
 
@@ -128,6 +133,7 @@ def get_theorem_from_db_exp(theorem):
             "edge_count": len(ps.inputs),
             "edge_count_norm": 1.0, 
             "expression": pstep_expr, 
+            "prop_expression": "⊢ " + ps.prop_statement,
             "lemma_complexity": 1.0, 
             "lemma_log_complexity": 1.0, 
             "log_complexity": 1.0, 

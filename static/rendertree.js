@@ -233,6 +233,10 @@ function main(data, threshold) {
                                     window.location.href = window.location.href + ";" + d.data.step;
                             });
 
+                        n_group.append("title").text(function(d) {
+                            return d.data.prop_expression
+                        });
+
                         n_group
                             .append("circle")
                             .attr("stroke", "white")
