@@ -10,7 +10,18 @@ import matplotlib.pyplot as plt
 
 from collections import defaultdict
 
-#Values collected loading 10k theorems in the database
+#Snippet to collect context values from the database
+# context_values = dict()
+# for prop in database.propositions_list:
+#     for k, v in prop.f.items():
+#         if k in context_values:
+#             if v.statement != context_values[k]:
+#                 print(k, v.statement, context_values[k])
+#                 break
+#         else:
+#             context_values[k] = v.statement
+
+#Values collected loading 16080 theorems in the database
 context_values = {
     'wph': ['ph'],
     'wps': ['ps'],
@@ -92,19 +103,16 @@ context_values = {
     'c.pd': ['.+^'],
     'c.x': ['.x.'],
     'vl': ['l'],
-    'c.0': ['.0.']
-}
-#Snippet to collect context values from the database
-# context_values = dict()
-
-# for prop in database.propositions_list:
-#     for k, v in prop.f.items():
-#         if k in context_values:
-#             if v.statement != context_values[k]:
-#                 print(k, v.statement, context_values[k])
-#                 break
-#         else:
-#             context_values[k] = v.statement
+    'c.0': ['.0.'],
+    'c.as': ['.*'],
+    'c.xp': ['.X.'],
+    'c.xi': ['.,'],
+    'vo': ['o'],
+    'c.xb': ['.xb'],
+    'c.pb': ['.+b'],
+    'c.xo': ['.(x)'],
+    'c.1': ['.1.']
+ }
 
 
 #wff_class_props = {p.label: p for p in database.propositions_list if p.vclass in ["wff", "class"]}
