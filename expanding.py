@@ -1,3 +1,5 @@
+import os
+
 import pickle
 
 from tree_parser import string_replace, proof_step
@@ -117,7 +119,20 @@ context_values = {
 
 #wff_class_props = {p.label: p for p in database.propositions_list if p.vclass in ["wff", "class"]}
 #pickle.dump(wff_class_props, open("wff_class_props.pkl", "wb"))
-wff_class_props = pickle.load(open("wff_class_props.pkl", "rb"))
+
+wff_class_props_file_places = [
+    "wff_class_props.pkl",
+    "../wff_class_props.pkl",
+    "../../wff_class_props.pkl"
+]
+
+wff_class_props = None
+for p in wff_class_props_file_places:
+    if os.path.exists(p):
+        wff_class_props = pickle.load(open(p, "rb"))
+        break
+
+assert wff_class_props != None
 
 def eval_tree(tree):
     if tree.value in context_values: 
@@ -192,6 +207,8 @@ class PStep:
     def __init__(self, step):
         self._step = step
         self.is_hyp = step.prop.type == 'e'
+
+        self.depth = 0
         
         self.output = None
         self.inputs = []
@@ -232,6 +249,16 @@ class PStep:
             for c in self.inputs:
                 c.get_hyps(hyps)
         return hyps
+
+    def get_steps_df(self, _ps_list=None):
+        if _ps_list == None:
+            _ps_list = []
+
+        _ps_list.append(self)
+        for child_step in self.inputs:
+            child_step.get_steps_df(_ps_list)
+
+        return _ps_list
     
     def copy(self):
         cp_psstep = PStep(self._step)
@@ -243,15 +270,22 @@ class PStep:
     
     def expand(self):
         if self.is_hyp:
-            return self.get_root_step()
+            return self#.get_root_step()
 
         exp_self = expand_proof_step_ps(self)
         
         if exp_self == None: #No more expansions are possible
-            return self.get_root_step()
+            return self#.get_root_step()
+
+        exp_self._expanded_from = self
+
+        for s in exp_self.get_steps_df():
+            s.depth = self.depth + 1
         
-        exp_self_root_step = replace_expanded_step(self, exp_self)
-        return exp_self_root_step
+        #Replace the expanded step in the proof it belongs to
+        #This means replace connections from the previous nodes with the newest nodes
+        exp_self_in_proof = replace_expanded_step(self, exp_self)
+        return exp_self_in_proof
         
     
     @property
@@ -261,6 +295,10 @@ class PStep:
     @property
     def prop_statement(self):
         return tree2str(self.prop.tree)
+
+    @property
+    def prop_hyps(self):
+        return [tree2str(h.tree) for h in self.prop.hyps if h.type == 'e']
     
     def __repr__(self):
         obj_name = "PStep" if not self.is_hyp else "PHyp"
@@ -327,7 +365,7 @@ def replace_expanded_step(step, expanded_step):
         
     #Return new proof
     #Maybe it is a good idea to perform a deepcopy of every step
-    return expanded_step.get_root_step() 
+    return expanded_step#.get_root_step() 
 
 class Step:
     def __init__(self, name):
