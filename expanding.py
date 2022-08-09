@@ -149,8 +149,11 @@ def eval_tree(tree):
     
     return string_replace(prop.statement[1:], replacement_dict)
 
-def tree2str(tree):
+def tree2str(tree, raw_symbols=False):
     evaluated_tree = eval_tree(tree)
+    if raw_symbols:
+        return " ".join(evaluated_tree)
+
     return replace_symbols(" ".join(evaluated_tree))
 
 
@@ -176,7 +179,7 @@ def get_step_replace_dict(step):
             if raw_subtree.value != rep_subtree.value:
                 repdict[raw_subtree.value] = rep_subtree
 
-    if len(e_hyps) == 0:
+    if len(e_hyps) == 0 or True:
         #Populate with conclusion (this is necessary when there is no hypothesis)
         raw_tree = step.prop.tree
         rep_tree = step.tree
@@ -207,8 +210,11 @@ class PStep:
     def __init__(self, step):
         self._step = step
         self.is_hyp = step.prop.type == 'e'
+        self._expanded_from = None
 
         self.depth = 0
+
+        self.statement_depth = 0
         
         self.output = None
         self.inputs = []
@@ -262,6 +268,11 @@ class PStep:
     
     def copy(self):
         cp_psstep = PStep(self._step)
+
+        cp_psstep.depth = self.depth
+        cp_psstep.statement_depth = self.statement_depth
+        cp_psstep._expanded_from = self._expanded_from
+
         for inp in self.inputs:
             cp_inp = inp.copy()
             cp_inp.output = cp_psstep
@@ -280,7 +291,15 @@ class PStep:
         exp_self._expanded_from = self
 
         for s in exp_self.get_steps_df():
+            #Not so sure whether this is correct or not
+            s._expanded_from = self
             s.depth = self.depth + 1
+            s.statement_depth = self.statement_depth + 1
+
+        #The step which calls the expand method should not have 
+        #its statement depth increase since it is the same statement as the original step
+        #so lets roll it back.
+        exp_self.statement_depth = self.statement_depth
         
         #Replace the expanded step in the proof it belongs to
         #This means replace connections from the previous nodes with the newest nodes
@@ -293,11 +312,22 @@ class PStep:
         return tree2str(self.tree)
 
     @property
+    def raw_statement(self):
+        return tree2str(self.tree, True)
+
+    @property
     def prop_statement(self):
         return tree2str(self.prop.tree)
 
     @property
+    def raw_prop_statement(self):
+        return tree2str(self.prop.tree, True)
+
+    @property
     def prop_hyps(self):
+        if self.is_hyp:
+            return []
+
         return [tree2str(h.tree) for h in self.prop.hyps if h.type == 'e']
     
     def __repr__(self):
@@ -380,6 +410,8 @@ def _get_proof_graph_pn_recursive(pn, G, node_label="label"):
         pn_gstep = Step(f"[{pn.label}] {pn.statement}")
     else:
         pn_gstep = Step(pn.label)
+
+    G.add_node(pn_gstep) #We need to add node this way in case it have o children
         
     for pni in pn.inputs:
         pni_gstep = _get_proof_graph_pn_recursive(pni, G, node_label)
@@ -466,3 +498,14 @@ def expand_proof_step_ps(root_step_ps):
         return None
         
     return list(expanded_steps_dict.values())[0].get_root_step()
+
+
+#Expand every depth 0 nodes
+def expand_all_nodes_with_depth(root, target_depth=0):
+    if root.depth == target_depth:
+        root = root.expand()
+    
+    for i in root.inputs:
+        expand_all_nodes_with_depth(i, target_depth)
+        
+    return root

@@ -1,0 +1,7 @@
+biimpi ⊢ ( x ∈ ( A ∩ A ) → ( x ∈ A ∧ x ∈ A ) )
+
+simpld ⊢ ( x ∈ ( A ∩ A ) → x ∈ A )
+
+biimpi ⊢ ( x ∈ A → ( x ∈ A ∧ x ∈ A ) )
+
+syl ⊢ ( x ∈ A → x ∈ ( A ∩ A ) )

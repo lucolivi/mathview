@@ -21,16 +21,24 @@ from expanding import construct_proof
 
 from flask import Flask, jsonify, abort, render_template, request, send_from_directory
 
+import glob
+
 app = Flask(__name__, static_url_path='/static')
 
 tdb = TheoremDatabase("tdb")
 
 edges_cnt = pickle.load(open("edges_cnt.pkl", "rb"))
 
-database = meta_math_database(file_contents("set.mm"),n=3500)
+database = meta_math_database(file_contents("set_mod.mm"), n=3000)
 
 #Load test data
 testdata = dict()
+for f in glob.glob(os.path.join("test_data", "*.txt")):
+    f_rev = "".join(reversed(f))
+    f_name = "".join(reversed(f_rev[4:f_rev.index("/")]))
+    testdata[f_name] = [l[l.index("⊢"):-1] for l in open(f).readlines() if len(l) > 2]
+
+print(testdata)
 
 @app.route('/favicon.ico')
 def favicon():
@@ -50,15 +58,15 @@ def save_database():
     return "Database saved."
 
 
-def get_proof_steps_list_df(root_step, _ps_list=None):
-    if _ps_list == None:
-        _ps_list = []
+# def get_proof_steps_list_df(root_step, _ps_list=None):
+#     if _ps_list == None:
+#         _ps_list = []
 
-    _ps_list.append(root_step)
-    for child_step in root_step.inputs:
-        get_proof_steps_list_df(child_step, _ps_list)
+#     _ps_list.append(root_step)
+#     for child_step in root_step.inputs:
+#         get_proof_steps_list_df(child_step, _ps_list)
 
-    return _ps_list
+#     return _ps_list
 
 
 @app.route("/debug_get")
@@ -81,11 +89,6 @@ def get_theorem_from_db_exp(theorem):
     
     prop_proof = construct_proof(prop)
 
-    #Perform required expansions
-    # num_expansions = int(request.args.get('expansions', 0))
-    # for _ in range(num_expansions):
-    #     prop_proof = prop_proof.expand()
-
     #Get expansions ids
     expansion_ids = request.args.get('expansions_ids', None)
     if expansion_ids:
@@ -94,7 +97,7 @@ def get_theorem_from_db_exp(theorem):
         expansions_ids = []
 
     while True:
-        proof_steps = get_proof_steps_list_df(prop_proof)
+        proof_steps = prop_proof.get_steps_df()
         proof_steps_dict = {}
 
         #Populate step numbers
@@ -109,7 +112,7 @@ def get_theorem_from_db_exp(theorem):
             break
         else: #Expand step and goes around the loop to recompute steps ids
             next_exp_id = expansions_ids.pop(0)
-            prop_proof = proof_steps_dict[next_exp_id].expand()
+            prop_proof = proof_steps_dict[next_exp_id].expand().get_root_step()
 
     
     #Populate hyps
@@ -126,25 +129,30 @@ def get_theorem_from_db_exp(theorem):
         #This is used to highlight nodes that should not be hidden
         ground_truth_display = False
         if theorem in testdata:
-            if pstep_label + " " + pstep_expr in testdata[theorem]:
+            #if pstep_label + " " + pstep_expr in testdata[theorem]:
+            if pstep_expr in testdata[theorem]:
                 ground_truth_display = True    
 
         pstep_dict = {
-            "edge_count": len(ps.inputs),
-            "edge_count_norm": 1.0, 
+
             "expression": pstep_expr, 
-            "prop_expression": "⊢ " + ps.prop_statement,
+            "prop_expression": ", ".join(ps.prop_hyps) + " ⊢ " + ps.prop_statement,
+            "step": ps.step_num, 
+            "theorem": pstep_label,
+            "ground_truth": pstep_label + " " + pstep_expr,
+            "ground_truth_display": ground_truth_display,
+            "statement_depth": ps.statement_depth,
+
+            #Granularity useful metrics
+            "step_prob": 1,#float(pstep.step_prob),
+            "step_obviousness": 1, #float(pstep.step_obviousness),
+            "step_complexity": 1.0, 
             "lemma_complexity": 1.0, 
             "lemma_log_complexity": 1.0, 
             "log_complexity": 1.0, 
             "norm_complexity": 1.0, 
-            "step": ps.step_num, 
-            "step_complexity": 1.0, 
-            "step_prob": 1,#float(pstep.step_prob),
-            "step_obviousness": 1, #float(pstep.step_obviousness),
-            "theorem": pstep_label,
-            "ground_truth": pstep_label + " " + pstep_expr,
-            "ground_truth_display": ground_truth_display
+            "edge_count": len(ps.inputs),
+            "edge_count_norm": 1.0, 
         } 
 
         steps.append(pstep_dict)
@@ -169,7 +177,7 @@ def get_theorem_from_db(theorem):
     #set_prop_probs(prop)
     #set_prop_obviousness(prop)
 
-    expression = replace_symbols("|- " + " ".join(tree_to_string(prop.tree, database, prop)))
+    expression = replace_symbols("⊢ " + " ".join(tree_to_string(prop.tree, database, prop)))
 
     #List all
     all_steps = []
@@ -432,4 +440,4 @@ def get_theorem_natural(theorem):
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5002)
+    app.run(debug=True, port=5002, host="0.0.0.0")

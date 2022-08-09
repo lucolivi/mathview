@@ -1,0 +1,3 @@
+orc ⊢ ( x ∈ A → ( x ∈ A ∨ x ∈ B ) )
+
+sylibr ⊢ ( x ∈ A → x ∈ ( A ∪ B ) )

@@ -182,6 +182,8 @@ function main(data, threshold) {
 
             var showDetails = window.location.search.substr(1) == "details"
 
+
+
             var link123 = g.select("#links-group")
                 .selectAll("line")
                 .data(root.links(), function(d){
@@ -190,16 +192,37 @@ function main(data, threshold) {
                     return Math.round(Math.random() * 10000000)
                 })
                 .join("line")
-                .attr("stroke", "#999")
-                .attr("stroke-opacity", 0.6)
+                .attr("stroke", "#555")
+                .attr("stroke-opacity", 1)
                 .attr("stroke-width", 2)
-                .attr("marker-end", "url(#arrows)");
-
-            link123
+                .attr("marker-end", "url(#arrows)")
                 .attr("x2", d => d.source.x)
                 .attr("y2", d => d.source.y)
                 .attr("x1", d => d.target.x)
                 .attr("y1", d => d.target.y);
+
+            //Populate expanded links
+            g.select("#links-group-expand")
+                .selectAll("line")
+                .data(root.links(), function(d){
+                    //console.log(d)
+                    //return d.id
+                    return Math.round(Math.random() * 10000000)
+                })
+                .join("line")
+                .attr("stroke", "lightgreen")
+                .attr("stroke-opacity", 1)
+                .attr("stroke-linecap", "round")
+                .attr("stroke-width", function(d){
+                    if(d.target.data.statement_depth > 0)
+                        return 35;
+                    return 0;
+                })
+                .attr("x2", d => d.source.x)
+                .attr("y2", d => d.source.y)
+                .attr("x1", d => d.target.x)
+                .attr("y1", d => d.target.y);
+
 
             node_y_offset = showDetails ? 1 : 2
             node_x_offset = -0.5
@@ -234,15 +257,27 @@ function main(data, threshold) {
                             });
 
                         n_group.append("title").text(function(d) {
-                            return d.data.prop_expression
+                            return d.data.prop_expression + "\n" + d.data.expression
                         });
 
                         n_group
                             .append("circle")
                             .attr("stroke", "white")
                             .attr("stroke-width", 1.5)
-                            .attr("r", 10)
+                            .attr("r", function(d){
+                                return 10
+                                return (5 - d.data.statement_depth)*3
+                                if(d.data.statement_depth > 0)
+                                    return 5
+                                return 10
+                            })
                             .attr("fill", function(d){
+                                if(d.data.ground_truth_display)
+                                    return "green"
+
+                                if(d.data.statement_depth > 0)
+                                    return "#222"
+                                    
                                 return "#aaaaff"
                                 //const scale = d3.scaleOrdinal(d3.schemeCategory10);
                                 //return scale(d.group);
