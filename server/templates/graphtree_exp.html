@@ -1,0 +1,225 @@
+<html>
+  <head>
+    <title>{{theorem}} - MathView</title>
+    <style>
+      #header-div {
+        background-color: rgba(0, 0, 0, 0.5);
+        /* display: inline-block; */
+        /* float: left; */
+        position: absolute;
+        padding: 10px;
+       
+        
+      }
+
+    </style>
+  </head>
+  <body>
+    <div id="header-div" style="display:block;">
+
+      <a href="http://us.metamath.org/mpeuni/{{theorem}}.html" target="_blank"><h1>{{theorem}}</h1></a>
+
+
+
+      <label for="criteria-list">Criteria:</label><br>
+
+      <select name="criteria-list" id="criteria-list">
+          <!-- <option value="volvo">EdgesCntNorm</option>
+          <option value="saab">NormComp</option> -->
+      </select>
+
+      <br>
+      <!-- <br>
+      <input type="checkbox" id="details" name="details" checked>
+      <label for="details">Show Details</label> -->
+
+      <br>
+
+      <!-- <div class="slidecontainer">
+        <input type="range" min="1" max="101" value="101" class="slider" id="myRange">
+        <p>Value: <span id="demo"></span></p>
+      </div> -->
+
+      <div id="thresbut">
+        <p>Current Value: 0</p>
+      </div>
+
+
+
+
+  </div>
+    
+    <!-- <script src="https://d3js.org/d3.v7.min.js"></script> -->
+    <script src="../static/d3.v7.min.js"></script>
+    <script src="../static/rendertree.js"></script>
+    <script>
+
+      var slider = document.getElementById("myRange");
+      var output = document.getElementById("demo");
+
+      var width = 1500
+      var height = 1500
+
+      const svg = d3.select("body")
+        .append("svg")
+        .style("font", "12px sans-serif")
+        .style("background-color", "#eee")
+
+      svg.attr("viewBox", [-width / 2, -height / 2, width, height]);
+
+      const g = svg.append("g");
+
+      const zoom = d3.zoom()
+            .scaleExtent([0.1, 8])
+            .on("zoom", zoomed);
+
+        function zoomed(event) {
+            const {transform} = event;
+            g.attr("transform", transform);
+            g.attr("stroke-width", 1 / transform.k);
+        }
+
+        const types = ["licensing","suit","resolved"];
+        const color = d3.scaleOrdinal(types, d3.schemeCategory10)
+
+          // Per-type markers, as they don't inherit styles.
+        svg.append("defs").append("marker")
+            .attr("id", "arrows")
+            .attr("viewBox", "0 -5 10 10")
+            .attr("refX", 15)
+            .attr("refY", -0.5)
+            .attr("markerWidth", 6)
+            .attr("markerHeight", 6)
+            .attr("orient", "auto")
+            .append("path")
+            .attr("fill", "#555")
+            .attr("d", "M0,-5L10,0L0,5");
+
+            
+        svg.call(zoom);
+
+        g.append("g").attr("id", "links-group-expand")
+        g.append("g").attr("id", "links-group")
+        
+        g.append("g").attr("id", "nodes-group")
+
+
+        //var link_group = g.append("g")
+        //var node_group = g.append("g")
+
+
+
+
+        d3.json("../theorem_db_exp/{{theorem}}" + window.location.search)
+          .then(render_theorem)
+          .catch(handle_error)
+
+        function handle_error(err) {
+          if(err.message == "404 NOT FOUND")
+            alert("Theorem {{theorem}} not found.")
+          else
+            alert(err)
+        }
+
+        function render_theorem(data) {
+
+          // console.log(data)
+          // console.log(arguments)
+
+          // Generate objects for each granularity threshold option
+          var granularityThrs = {}
+          for(var prop in data.steps[0]) {
+              if(prop.startsWith("_thrs_")) {
+                var thrsName = prop//.substring(6)
+                granularityThrs[thrsName] = []
+                for(var i in data.steps) {
+                  granularityThrs[thrsName].push(data.steps[i][prop])
+                }
+              }
+          }
+
+
+
+
+
+          //Update granularity buttons
+          function updateGranularityButtons() {
+            var threshValName = document.getElementById("criteria-list").value
+            // console.log(threshValName)
+
+              var thres_values = new Set()
+
+              for(var i in data.steps) {
+                  thres_values.add(data.steps[i][threshValName])
+                  //thres_values.add(roundDecimals(data.steps[i].edge_count_norm, 5))
+              }
+
+              thres_values = Array.from(thres_values).sort((a,b) => a-b)//.reverse()
+          
+              d3.select("#thresbut")
+                .selectAll("button")
+                .data(thres_values)
+                .join("button")
+                .style("display", "block")
+                .text(function(d, i) {
+                  //return "Threshold: " + d;
+                  return "Granularity Level " + d //+ " (" + d + ")"
+                })
+                .on("click", function(e, d) {
+                  //level_indicator.text("Granularity Level " + i)
+                  // slider.value = Math.round(d*100)
+                  // output.innerHTML = slider.value / 100;
+                  // main(data, d+Number.EPSILON)
+                  d3.select("#thresbut").select("p").text("Current Value: " + d)
+                  main(data, d)
+                });
+          }
+
+          // Populate list of granularity threshold options
+          d3.select("#criteria-list")
+            .selectAll("option")
+            .data(Object.keys(granularityThrs))
+            .join("option")
+            .attr("value", d => d)
+            .text(d => d)
+            
+          d3.select("#criteria-list")
+            .on("change", updateGranularityButtons)
+
+          updateGranularityButtons()
+
+
+          //The logic here is that things with the highest values should be shown
+          //whereas things with smallest values should be hidden
+
+          // d3.select("#details")
+          //   .on("change", _ => main(data, slider.value / 100))
+
+          main(data,0)
+
+          // main(data, slider.value / 100)
+          // output.innerHTML = slider.value / 100;
+
+          // slider.oninput = function() {
+          //   main(data, slider.value / 100)
+          //   output.innerHTML = this.value / 100;
+          // }
+        
+          // var level_indicator = d3.select("#thresbut")
+          //   .append("p")
+          //   .text("Granularity Level 0")
+
+          //console.log(thres_values)
+
+        }
+        
+        function roundDecimals(value, decimals) {
+          return Math.round((value + Number.EPSILON) * Math.pow(10, decimals)) / Math.pow(10, decimals)
+        }
+
+
+
+
+    </script>
+  </body>
+</html>

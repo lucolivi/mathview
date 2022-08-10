@@ -1,0 +1,27 @@
+<html>
+  <head>
+    <title>{{theorem}} - MathView</title>
+    <style>
+      body {
+        margin-left: 500px;
+      }
+
+    </style>
+  </head>
+  <body>
+    <a href="http://us.metamath.org/mpeuni/{{theorem}}.html" target="_blank"><h1>{{theorem}}</h1></a>
+    <p>Complexity: {{complexity}}</p>
+    <p>Log Complexity: {{log_complexity}}</p>
+    <form method="GET">
+      <input type="text" name="t">
+      <input type="submit">
+    </form>
+    <br><br>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="../static/linear.js"></script>
+    <script>
+      main("{{theorem}}")
+
+    </script>
+  </body>
+</html>
