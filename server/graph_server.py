@@ -28,39 +28,100 @@ import glob
 
 import random
 
+from models_functions import get_props_features_xy
+
 app = Flask(__name__, static_url_path='/static')
 
 tdb = TheoremDatabase("../data/tdb")
 
 edges_cnt = pickle.load(open("../data/edges_cnt.pkl", "rb"))
 
-database = meta_math_database(file_contents("../data/set_mod.mm"), n=3000)
+database = meta_math_database(file_contents("../data/set_mod.mm"), n=5000)
+
+print("Loading model...")
+model_name = "1660273773.971621"
+ml_model = pickle.load(open(os.path.join("../data/trained_models", model_name, "model.pkl"), "rb"))
 
 #Load test data
 testdata = dict()
-for f in glob.glob(os.path.join("data/test_data", "*.txt")):
+for f in glob.glob(os.path.join("../data/test_data", "*.txt")):
     f_rev = "".join(reversed(f))
     f_name = "".join(reversed(f_rev[4:f_rev.index("/")]))
     testdata[f_name] = [l[l.index("⊢"):-1] for l in open(f).readlines() if len(l) > 2]
 
 print(testdata)
 
+def get_theorem_complexity(theorem_name):
+    theorem = tdb[theorem_name]
+    
+    if theorem == None:
+        return 0
+    
+    if "complexity" not in theorem:
+        print(theorem["theorem"])
+        
+        if len(theorem["steps"]) == 0:
+            theorem["complexity"] = 1
+        else:
+            theorem["complexity"] = sum([get_theorem_complexity(tt["theorem"]) for tt in theorem["steps"]])
+            
+    return theorem["complexity"]
+
+
+def get_prop_data(prop_proof):
+    
+    # prop = database.propositions[prop_label]
+    
+    # prop_proof = construct_proof(prop)
+
+    prop_dataset = {
+        'steps':[],
+        'links':[]
+    }
+
+    #Populate step numbers
+    next_step_n = 0
+    for s in prop_proof.get_steps_df(): 
+        next_step_n += 1
+        s._step_num = next_step_n
+
+    for s in prop_proof.get_steps_df():
+
+        prop_dataset["steps"].append((
+            s._step_num,
+            s.label,
+            s.raw_statement,
+            s.raw_prop_statement,
+            get_theorem_complexity(s.label), #Lemma complexity
+            int(s.statement_depth == 0)
+        ))
+
+        for child_s in s.inputs:
+            prop_dataset["links"].append((child_s._step_num, s._step_num))
+
+
+    return prop_dataset
+
+
+
+
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'),
                                'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
+
 @app.route("/")
 def hello_world():
     return "<p>Hello, World!</p>"
 
-@app.route("/save")
-def save_database():
+# @app.route("/save")
+# def save_database():
 
-    #pickle.dump(database, open("theorem_database.pkl", "wb"))
-    tdb.save()
+#     #pickle.dump(database, open("theorem_database.pkl", "wb"))
+#     tdb.save()
 
-    return "Database saved."
+#     return "Database saved."
 
 
 @app.route("/debug_get")
@@ -108,6 +169,10 @@ def get_theorem_from_db_exp(theorem):
             next_exp_id = expansions_ids.pop(0)
             prop_proof = proof_steps_dict[next_exp_id].expand().get_root_step()
 
+
+    #Get Ml Model prediction
+    prop_features_x, _ = get_props_features_xy(get_prop_data(prop_proof))
+    pred_y = ml_model.predict_proba(prop_features_x)[:,1]
     
     #Populate hyps
     hyps = []
@@ -116,7 +181,7 @@ def get_theorem_from_db_exp(theorem):
             hyps.append([ps.step_num, child_step.step_num])
 
     steps = []
-    for ps in proof_steps:
+    for ps, ml_pred_y in zip(proof_steps, pred_y):
         pstep_expr = "⊢ " + ps.statement
         pstep_label = ps.label
 
@@ -142,12 +207,14 @@ def get_theorem_from_db_exp(theorem):
             #"step_obviousness": 1, #float(pstep.step_obviousness),
             #"step_complexity": 1.0, 
             "_thrs_random_value": round(random.random(),4),
-            "_thrs_lemma_complexity": tdb[pstep_label]["complexity"],
+            "_thrs_lemma_complexity": get_theorem_complexity(pstep_label), #tdb[pstep_label]["complexity"],
             #"lemma_log_complexity": math.log(tdb[pstep_label]["complexity"]), 
             #"log_complexity": 1.0, 
             #"norm_complexity": 1.0, 
             "_thrs_edge_count": len(ps.inputs),
             "_thrs_symbols_count": round(1 / len(pstep_expr.split(" ")), 5),
+            "_thrs_statement_depth": -ps.statement_depth,
+            "_thrs_ml_prediction": round(ml_pred_y, 5)
             #"edge_count_norm": 1.0, 
         } 
 
