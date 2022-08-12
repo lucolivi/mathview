@@ -1,5 +1,0 @@
-ssel ⊢ ( A ⊆ B → ( x ∈ A → x ∈ B ) )
-
-ssel ⊢ ( B ⊆ C → ( x ∈ B → x ∈ C ) )
-
-biimpri ⊢ ( ∀ x ( x ∈ A → x ∈ C ) → A ⊆ C )

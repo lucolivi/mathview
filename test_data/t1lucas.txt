@@ -1,9 +1,0 @@
-ssun2 ⊢ B ⊆ ( A ∪ B )
-
-biimpi ⊢ ( x ∈ ( A ∪ B ) → ( x ∈ A ∨ x ∈ B ) )
-
-expcom ⊢ ( A ⊆ B → ( x ∈ ( A ∪ B ) → x ∈ B ) )
-
-ssun1 ⊢ A ⊆ ( A ∪ B )
-
-syl5ss ⊢ ( ( A ∪ B ) = B → A ⊆ B )
