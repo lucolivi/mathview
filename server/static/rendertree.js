@@ -25,6 +25,15 @@ function main(data, threshold) {
 
     var threshValName = document.getElementById("criteria-list").value
 
+
+    //Set steps whether they should be shown or not
+    for(var i in data.steps) {
+        data.steps[i].show = data.steps[i].step == 1 || //Root step should not be hidden
+            (data.steps[i].theorem.includes(".") && data.steps[i].theorem.includes(data.theorem) )|| //Hypothesis includes dots so should not be hidden
+            data.steps[i][threshValName] > threshold
+    }
+
+
     //Filter nodes
     filtered_steps = []
     used_ids = []
@@ -69,10 +78,6 @@ function main(data, threshold) {
         }
 
         //console.log(filtered_steps)
-       //console.log(filtered_hyps)
-
-
-
 
         //Create treeData
         var nodesDict = {}
@@ -122,6 +127,59 @@ function main(data, threshold) {
 
         // console.log(nodes)
         // console.log(links)
+
+        function getActiveChildren(step, activeChildren) {
+
+            for(var i in step.children) {
+                if(step.children[i].show)
+                    activeChildren.push(step.children[i])
+                else
+                    getActiveChildren(step.children[i], activeChildren)     
+            }
+
+            return activeChildren
+        }
+
+        function cleanExpression(expr) {
+            expr = expr.substring(2)
+            if(expr.substr(0,1) == "(" && expr.substr(expr.length-1,1) == ")")
+                expr = expr.substring(2, expr.length-2)
+            return expr
+        }
+
+
+
+        // Render natural language proof
+        //console.log(filtered_steps)
+        var nl_proof_lines = []
+        for(var i in filtered_steps) {
+            if(!filtered_steps[i].show)
+                continue;
+
+            var expr = cleanExpression(filtered_steps[i].expression)
+
+            var stepChildren = getActiveChildren(filtered_steps[i], [])
+
+            if(stepChildren.length == 0)
+                nl_proof_lines.push("Temos que " + expr + ".")
+            else {
+                var subExprLines = ""
+                for(var c in stepChildren) {
+                    if(stepChildren.length > 1 && c == stepChildren.length - 1)
+                        subExprLines += " e "
+                    else if(c > 0)
+                        subExprLines += ", "
+                
+                    subExprLines += cleanExpression(stepChildren[c].expression)
+                    //subExprLines.push(cleanExpression(stepChildren[c].expression))
+                }
+
+                nl_proof_lines.push("Como " + subExprLines + ", logo " + expr + ".")
+            }
+
+        }
+        nl_proof = nl_proof_lines.reverse().join("\n")
+        d3.select("#natural-lang-proof").text(nl_proof)
 
 
 
@@ -256,7 +314,19 @@ function main(data, threshold) {
                             });
 
                         n_group.append("title").text(function(d) {
-                            return d.data.prop_expression + "\n" + d.data.expression
+                            var returnValues = [
+                                d.data.prop_expression,
+                                d.data.expression,
+                                ""
+                            ]
+
+                            for(var prop in data.steps[0]) {
+                                if(prop.startsWith("_thrs_")) {
+                                    returnValues.push(prop + ": " + d.data[prop])
+                                }
+                            }
+                            
+                            return returnValues.join("\n")
                         });
 
                         n_group
@@ -328,11 +398,15 @@ function main(data, threshold) {
                             .transition()
                             .duration(500)
                             .style("opacity", function(d) {
-
-                                if(d.data[threshValName] >= threshold)
+                                if(d.data.show)
                                     return 1.0
                                 else
                                     return 0.0
+
+                                // if(d.data.step == 1 || d.data[threshValName] >= threshold)
+                                //     return 1.0
+                                // else
+                                //     return 0.0
                             })
 
                         return update;

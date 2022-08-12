@@ -130,3 +130,8 @@ dmypy.json
 
 # Data files
 *.mm
+
+
+.DS_Store
+*/.DS_Store
+*/*/.DS_Store

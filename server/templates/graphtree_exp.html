@@ -12,6 +12,23 @@
         
       }
 
+      #natural-lang-proof {
+        position:absolute;
+        bottom:8px;
+        right:8px;
+        width:calc(100% - 250px);
+        height:30%;
+        white-space: nowrap;  
+        overflow: auto;
+        background-color: rgba(255,255,255,1.0);
+        resize: none;
+      }
+
+      svg {
+        height: 100%;
+        width:100%;
+      }
+
     </style>
   </head>
   <body>
@@ -44,10 +61,9 @@
         <p>Current Value: 0</p>
       </div>
 
+    </div>
 
-
-
-  </div>
+    <textarea id="natural-lang-proof"></textarea>
     
     <!-- <script src="https://d3js.org/d3.v7.min.js"></script> -->
     <script src="../static/d3.v7.min.js"></script>
@@ -155,6 +171,8 @@
               }
 
               thres_values = Array.from(thres_values).sort((a,b) => a-b)//.reverse()
+
+              thres_values.unshift(-1) //Add reset value to show all nodes
           
               d3.select("#thresbut")
                 .selectAll("button")
@@ -163,6 +181,9 @@
                 .style("display", "block")
                 .text(function(d, i) {
                   //return "Threshold: " + d;
+                  if(i == 0)
+                    return "Reset"
+
                   return "Granularity Level " + d //+ " (" + d + ")"
                 })
                 .on("click", function(e, d) {
